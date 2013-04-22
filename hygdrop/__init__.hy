@@ -9,7 +9,7 @@
 (import time)
 
 (defn on-welcome [connection event]
-  (.join connection "#hy-test"))
+  (.join connection "#hy"))
 
 (defn dump-exception [e]
   (.write sys.stderr (str e))
