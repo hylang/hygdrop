@@ -6,10 +6,15 @@
 (import __builtin__)
 (import StringIO)
 (import sys)
-
+(import time)
 
 (defn on-welcome [connection event]
-  (.join connection "#hy"))
+  (.join connection "#hy-test"))
+
+(defn dump-exception [e]
+  (.write sys.stderr (str e))
+  (.write sys.stderr "\n")
+  (.flush sys.stderr))
 
 (defn on-pubmsg [connection event]
   (let [[arg (get event.arguments 0)]
@@ -41,11 +46,12 @@
                       (.replace (.getvalue sys.stdout) "\n" " ")))
           (except [e Exception]
                   (try
-                    (.privmsg connection event.target
-                              (.replace (str e) "\n" " "))
-                    (except []
-                            (do (.write sys.stderr (str e))
-                                (.flush sys.stderr))))))))))
+                    (for [line (.split (.decode (str e) "utf-8") "\n")]
+                      (.notice connection event.target line)
+                      (time.sleep 0.5))
+                    (except [f Exception]
+                            (do (dump-exception e)
+                                (dump-exception f))))))))))
 
 (defn start []
   (let [[bot
