@@ -4,7 +4,7 @@
 (import hy.importer)
 (import hy.compiler)
 (import __builtin__)
-(import cStringIO)
+(import StringIO)
 (import sys)
 
 
@@ -27,15 +27,15 @@
         (setv compiled-code
               (fn []
                 (__builtin__.eval
-                 (hy.importer.compile_
+                 (hy.importer.ast_compile
                   (hy.compiler.hy_compile
-                   (hy.importer.import_buffer_to_hst (cStringIO.StringIO code))
+                   (hy.importer.import_buffer_to_hst code)
                    ast.Interactive)
                   "IRC"
                   "single"))))
         (try
           (do
-            (setv sys.stdout (cStringIO.StringIO))
+            (setv sys.stdout (StringIO.StringIO))
             (.call bsandbox compiled-code)
             (.privmsg connection event.target
                       (.replace (.getvalue sys.stdout) "\n" " ")))
