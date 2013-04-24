@@ -48,6 +48,31 @@
         (.append message (+ "<" issue-url ">"))
         (.notice connection target (.join " " message))))))
 
+(defn pretty-print-commit [connection target arg]
+  (setv (, project repo commit) arg)
+  (if (not project) (setv project "hylang"))
+  (if (not repo) (setv repo "hy"))
+  (let [[api-url (+ "https://api.github.com/repos/" project "/" repo "/commits/" commit)]
+        [api-result (requests.get api-url)]
+        [api-json (.json api-result)]]
+    (if (= (getattr api-result "status_code") 200)
+      (do
+        (setv commit-json (get api-json "commit"))
+        (setv title (get (.splitlines (get commit-json "message")) 0))
+        (setv author (get (get commit-json "author") "name"))
+        (setv commit-url (get api-json "html_url"))
+        (setv sha (get api-json "sha"))
+        (setv message [
+          "Commit"
+          (slice sha 0 7)
+          "on"
+          (+ project "/" repo)
+          "by"
+          (+ author ":")
+          title
+          (+ "<" commit-url ">")])
+        (.notice connection target (.join " " message))))))
+
 (defn on-pubmsg [connection event]
   (let [[arg (get event.arguments 0)]
         [code null]
@@ -56,6 +81,8 @@
         [compiled-code null]]
     (map (partial pretty-print-issue connection event.target)
          (re.findall "(?:(?:(?P<project>[a-zA-Z0-9._-]+)/)?(?P<repo>[a-zA-Z0-9._-]+))?#(?P<issue>\\d+)" arg))
+    (map (partial pretty-print-commit connection event.target)
+         (re.findall "(?:(?:(?P<project>[a-zA-Z0-9._-]+)/)?(?P<repo>[a-zA-Z0-9._-]+))?@(?P<commit>[a-f0-9]+)" arg))
     (if (.startswith arg (+ connection.nickname ": "))
       (do
         (setv sandbox-config (sandbox.SandboxConfig "stdout"))
