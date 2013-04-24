@@ -9,6 +9,7 @@
 (import time)
 (import re)
 (import [functools [partial]])
+(import requests)
 
 (defn on-welcome [connection event]
   (.join connection "#hy"))
@@ -19,9 +20,23 @@
   (.flush sys.stderr))
 
 (defn expand-issue-url [connection target issue]
-  (.notice connection target (+ "#" (str issue)
-                                " => https://github.com/hylang/hy/issues/"
-                                (str issue))))
+  (let [[api-url (+ "https://api.github.com/repos/hylang/hy/issues/" (str issue))]
+        [issue-url (+ "https://github.com/hylang/hy/issues/" (str issue))]
+        [api-result (requests.get api-url)]
+        [api-json (.json api-result)]]
+    (if (= (getattr api-result "status_code") 200)
+      (do
+        (setv title (get api-json "title"))
+        (setv status (get api-json "state"))
+        (defn get_name [x] (get x "name"))
+        (setv labels (.join " " (map get_name (get api-json "labels"))))
+        (setv message [
+          (+ "#" (str issue))
+          title
+          (+ "(" status ")")
+          (+ "[" labels "]")
+          issue-url])
+        (.notice connection target (.join " " message))))))
 
 (defn on-pubmsg [connection event]
   (let [[arg (get event.arguments 0)]
