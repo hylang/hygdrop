@@ -19,23 +19,58 @@
   (.write sys.stderr "\n")
   (.flush sys.stderr))
 
-(defn expand-issue-url [connection target issue]
-  (let [[api-url (+ "https://api.github.com/repos/hylang/hy/issues/" (str issue))]
-        [issue-url (+ "https://github.com/hylang/hy/issues/" (str issue))]
+(defn pretty-print-issue [connection target arg]
+  (setv (, project repo issue) arg)
+  (if (not project) (setv project "hylang"))
+  (if (not repo) (setv repo "hy"))
+  (let [[api-url (+ "https://api.github.com/repos/" project "/" repo "/issues/" issue)]
         [api-result (requests.get api-url)]
         [api-json (.json api-result)]]
     (if (= (getattr api-result "status_code") 200)
       (do
         (setv title (get api-json "title"))
         (setv status (get api-json "state"))
+        (setv issue-url (get api-json "html_url"))
         (defn get_name [x] (get x "name"))
-        (setv labels (.join " " (map get_name (get api-json "labels"))))
-        (setv message [
-          (+ "#" (str issue))
+        (setv labels (.join "|" (map get_name (get api-json "labels"))))
+        (setv author (get (get api-json "user") "login"))
+        (if (get (get api-json "pull_request") "html_url")
+          (setv message [(+ "Pull Request #" issue)])
+          (setv message [(+ "Issue #" issue)]))
+        (.extend message [
+          "on"
+          (+ project "/" repo)
+          "by"
+          (+ author ":")
           title
-          (+ "(" status ")")
-          (+ "[" labels "]")
-          issue-url])
+          (+ "(" status ")")])
+        (if labels (setv please-hy-don-t-return-when-i (.append message (+ "[" labels "]"))))
+        (.append message (+ "<" issue-url ">"))
+        (.notice connection target (.join " " message))))))
+
+(defn pretty-print-commit [connection target arg]
+  (setv (, project repo commit) arg)
+  (if (not project) (setv project "hylang"))
+  (if (not repo) (setv repo "hy"))
+  (let [[api-url (+ "https://api.github.com/repos/" project "/" repo "/commits/" commit)]
+        [api-result (requests.get api-url)]
+        [api-json (.json api-result)]]
+    (if (= (getattr api-result "status_code") 200)
+      (do
+        (setv commit-json (get api-json "commit"))
+        (setv title (get (.splitlines (get commit-json "message")) 0))
+        (setv author (get (get commit-json "author") "name"))
+        (setv commit-url (get api-json "html_url"))
+        (setv sha (get api-json "sha"))
+        (setv message [
+          "Commit"
+          (slice sha 0 7)
+          "on"
+          (+ project "/" repo)
+          "by"
+          (+ author ":")
+          title
+          (+ "<" commit-url ">")])
         (.notice connection target (.join " " message))))))
 
 (defn on-pubmsg [connection event]
@@ -44,8 +79,10 @@
         [bsandbox null]
         [sandbox-config null]
         [compiled-code null]]
-    (map (partial expand-issue-url connection event.target)
-         (re.findall "#(\\d+)" arg))
+    (map (partial pretty-print-issue connection event.target)
+         (re.findall "(?:(?:(?P<project>[a-zA-Z0-9._-]+)/)?(?P<repo>[a-zA-Z0-9._-]+))?#(?P<issue>\\d+)" arg))
+    (map (partial pretty-print-commit connection event.target)
+         (re.findall "(?:(?:(?P<project>[a-zA-Z0-9._-]+)/)?(?P<repo>[a-zA-Z0-9._-]+))?@(?P<commit>[a-f0-9]+)" arg))
     (if (.startswith arg (+ connection.nickname ": "))
       (do
         (setv sandbox-config (sandbox.SandboxConfig "stdout"))
