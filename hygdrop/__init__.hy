@@ -7,6 +7,8 @@
 (import StringIO)
 (import sys)
 (import time)
+(import re)
+(import [functools [partial]])
 
 (defn on-welcome [connection event]
   (.join connection "#hy"))
@@ -16,12 +18,19 @@
   (.write sys.stderr "\n")
   (.flush sys.stderr))
 
+(defn expand-issue-url [connection target issue]
+  (.notice connection target (+ "#" (str issue)
+                                " => https://github.com/hylang/hy/issues/"
+                                (str issue))))
+
 (defn on-pubmsg [connection event]
   (let [[arg (get event.arguments 0)]
         [code null]
         [bsandbox null]
         [sandbox-config null]
         [compiled-code null]]
+    (map (partial expand-issue-url connection event.target)
+         (re.findall "#(\\d+)" arg))
     (if (.startswith arg (+ connection.nickname ": "))
       (do
         (setv sandbox-config (sandbox.SandboxConfig "stdout"))
