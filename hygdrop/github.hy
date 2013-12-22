@@ -50,3 +50,25 @@
 	(if dry-run
 	  (.join " " message)
 	  (.notice connection target (.join " " message)))))))
+
+(defun get-core-members [connection target &optional [project "hylang"]
+			 [dry-run False]]
+  (let [[api-url (.format "https://api.github.com/orgs/{}/members"
+			  project)]
+	[api-result (.get requests api-url)]
+	[api-json (.json api-result)]
+	[message (list)]]
+    (if (= (getattr api-result "status_code") 200)
+      (do
+       (.extend message ["Core Team Consists of"])
+       (foreach [dev api-json]
+	 (do
+	  (setv dev-result (.get requests
+				 (.format "https://api.github.com/users/{}"
+					  (get dev "login"))))
+	  (if (= (getattr dev-result "status_code") 200)
+	    (setv don-t-return-damit
+	    	  (.extend message [(get (.json dev-result) "name")])))))))
+    (if dry-run
+      (.join "\n" message)
+      (.notice connection target (.join "\n" message)))))

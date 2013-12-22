@@ -18,3 +18,14 @@ def test_get_github_commit():
                          "<https://github.com/hylang/hy/commit/3e8941cdde01635890db524c4789f0640fe665c3>"])
     actual = g.get_github_commit(None, None, "3e8941c", dry_run=True )
     assert expected == actual
+
+def test_get_core_members():
+    expected = "\n".join(["Core Team consists of", "Julien Danjou",
+                          "Morten Linderud", "J Kenneth King", "Gergely Nagy",
+                          "Abhishek L", "Christopher Allan Webber",
+                          "Konrad Hinsen","Will Kahn-Greene",
+                          "Paul Tagliamonte","Nicolas Dandrimont", 
+                          "Berker Peksag", ])
+    actual = g.get_core_members(None, None, dry_run=True)
+    print(actual)
+    assert actual == expected
