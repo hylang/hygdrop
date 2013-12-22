@@ -60,15 +60,19 @@
 	[message (list)]]
     (if (= (getattr api-result "status_code") 200)
       (do
-       (.extend message ["Core Team Consists of"])
+       (.extend message ["Core Team Consists of: "])
        (foreach [dev api-json]
 	 (do
 	  (setv dev-result (.get requests
 				 (.format "https://api.github.com/users/{}"
 					  (get dev "login"))))
 	  (if (= (getattr dev-result "status_code") 200)
-	    (setv don-t-return-damit
-	    	  (.extend message [(get (.json dev-result) "name")])))))))
+	    ;; special case handling specifically for khinsen, his
+	    ;; null name breaks our code :(
+	     (setv don-t-return-damit
+		   (.extend message [(if (not (get (.json dev-result) "name"))
+				       (get dev "login")
+				       (get (.json dev-result) "name"))])))))))
     (if dry-run
-      (.join "\n" message)
-      (.notice connection target (.join "\n" message)))))
+      (.join ", " message)
+      (.notice connection target (.join ", " message)))))
