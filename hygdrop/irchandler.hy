@@ -1,10 +1,15 @@
 (import ast
+	sys
 	re
-	hy.importer
-	hy.compiler
+	builtins
+	[hy.importer [ast_compile import_buffer_to_hst
+		      import_buffer_to_module]]
+	[hy.compiler [hy_compile]]
 	[functools [partial]]
 	[github [get-github-issue get-github-commit
-		 get-core-members]])
+		 get-core-members]]
+	[io [StringIO]]
+	[time [sleep]])
 
 (defun handle-github-msg [github-fn github-msg
 			  &optional [dry-run False]]
@@ -15,6 +20,19 @@
     (if (not repo) (setv repo "hy"))
     (kwapply (github-fn query) {"project" project "repo" repo
 					  "dry_run" (if dry-run True False)})))
+
+(defun eval-code [code]
+  (import-buffer-to-module __name__ code)
+  (setv sys.stdout (StringIO))
+  (builtins.eval (ast_compile (-> (import_buffer_to_hst code)
+				  (hy_compile __name__ ast.Interactive))
+			      "IRC" "single"))
+  (.replace (.getvalue sys.stdout) "\n" " "))
+
+(defn dump-exception [e]
+  (.write sys.stderr (str e))
+  (.write sys.stderr "\n")
+  (.flush sys.stderr))
 
 (defun pubmsg-handler [connection event]
   (let [[arg (get event.arguments 0)]
@@ -29,12 +47,25 @@
       (handle-github-msg issue-fn issue-msg))
     (if commit-msg
       (handle-github-msg commit-fn commit-msg))
-    (if (or (.startswith arg ", ")
+    (if (or (.startswith arg ",")
 	    (.startswith arg (+ connection.nickname ": ")))
-      (progn
-       (if (not (= (re.search
-		    "(?:(.*core team.*members?.*|.*members?.*core team.*))"
-		    arg) null))
-	 (get-core-members connection event.target)
-	 (do
-	  (print "Code Evaluation not implemented")))))))
+      (if (not (= (re.search
+		   "(?:(.*core team.*members?.*|.*members?.*core team.*))"
+		   arg) null))
+	(get-core-members connection event.target)
+	(do
+	 (setv code-startpos ((fn[] (if (.startswith arg ",") 1
+					(+ (len connection.nickname) 2)))))
+	 (try
+	  (.privmsg connection event.target
+		    (eval-code
+		     (slice arg code-startpos)))
+	  (catch [e Exception]
+	    (try
+	     (for [line (.split (str e) "\n")]
+	       (.notice connection event.target line)
+	       (sleep 0.5))
+	     (catch [f Exception]
+	       (progn
+		(dump-exception e)
+		(dump-exception f)))))))))))
