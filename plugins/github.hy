@@ -78,7 +78,7 @@
 					(get dev "login")
 					(get (.json dev-result) "name"))])))))))
       (if dry-run
-	(.join ", " message)
+	(+ "Core Team consists of: " (.join ", " message))
 	(.notice connection target (+ "Core Team consists of: "
 				      (.join ", " message)))))))
 

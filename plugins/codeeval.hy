@@ -15,21 +15,22 @@
   (.write sys.stderr "\n")
   (.flush sys.stderr))
 
-(defun eval-code [connection target code]
+(defun eval-code [connection target code &optional [dry-run False]]
   (setv sys.stdout (StringIO))
-  ;; (builtins.eval (ast_compile (-> (import_buffer_to_hst code)
-  ;; 				  (hy_compile __name__ ast.Interactive))
-  ;; 			      "<input>" "single"))
   (.runsource hr code)
-  (.privmsg connection target (.replace (.getvalue sys.stdout) "\n" " ")))
+  (if dry-run
+    (.replace (.getvalue sys.stdout) "\n" " ")
+    (.privmsg connection target (.replace (.getvalue sys.stdout) "\n" " "))))
 
-(defun source-code [connection target hy-code]
+(defun source-code [connection target hy-code &optional [dry-run False]]
   (let [[astorcode (-> (import_buffer_to_hst hy-code)
 		       (hy_compile __name__ ))]
 	[pysource (.to_source astor.codegen astorcode)]]
-    (foreach [line (.split pysource "\n")]
-      (.privmsg connection target line)
-      (sleep 0.5))))
+    (if dry-run
+      pysource
+      (foreach [line (.split pysource "\n")]
+	(.privmsg connection target line)
+	(sleep 0.5)))))
 
 (defun process [connection event message]
   (try
