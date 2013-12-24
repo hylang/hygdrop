@@ -65,7 +65,6 @@
 	  [message (list)]]
       (if (= (getattr api-result "status_code") 200)
 	(do
-	 (.extend message ["Core Team Consists of: "])
 	 (foreach [dev api-json]
 	   (do
 	    (setv dev-result (.get requests
@@ -80,7 +79,8 @@
 					(get (.json dev-result) "name"))])))))))
       (if dry-run
 	(.join ", " message)
-	(.notice connection target (.join ", " message))))))
+	(.notice connection target (+ "Core Team consists of: "
+				      (.join ", " message)))))))
 
 (defun handle-github-msg [github-fn github-msg
 			  &optional [dry-run False]]
