@@ -5,7 +5,10 @@
 	[io [StringIO]]
 	[time [sleep]]
 	[hy.importer [import_buffer_to_hst ast_compile]]
-	[hy.compiler [hy_compile]])
+	[hy.compiler [hy_compile]]
+	[hy.cmdline [HyREPL]])
+
+(def hr (HyREPL))
 
 (defn dump-exception [e]
   (.write sys.stderr (str e))
@@ -14,9 +17,10 @@
 
 (defun eval-code [connection target code]
   (setv sys.stdout (StringIO))
-  (builtins.eval (ast_compile (-> (import_buffer_to_hst code)
-				  (hy_compile __name__ ast.Interactive))
-			      "IRC" "single"))
+  ;; (builtins.eval (ast_compile (-> (import_buffer_to_hst code)
+  ;; 				  (hy_compile __name__ ast.Interactive))
+  ;; 			      "<input>" "single"))
+  (.runsource hr code)
   (.privmsg connection target (.replace (.getvalue sys.stdout) "\n" " ")))
 
 (defun source-code [connection target hy-code]
