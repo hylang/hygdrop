@@ -12,9 +12,9 @@
 	  [api-json (.json api-result)]]
       (if (= (getattr api-result "status_code") 200)
 	(let [[title (get api-json "title")]
-					   [status (get api-json "state")]
+	      [status (get api-json "state")]
 	      [issue-url (get api-json "html_url")]
-					   [get-name (fn [x] (get x "name"))]
+	      [get-name (fn [x] (get x "name"))]
 	      [labels (.join "|" (map get-name (get api-json "labels")))]
 	      [author (get (get api-json "user") "login")]
 	      [message (list)]]
@@ -42,7 +42,7 @@
 	  [api-json (.json api-result)]]
       (if (= (getattr api-result "status_code") 200)
 	(let [[commit-json (get api-json "commit")]
-	      
+
 	      [title (get (.splitlines (get commit-json "message")) 0)]
 	      [author (get (get commit-json "author") "name")]
 	      [commit-url (get api-json "html_url")]
@@ -100,7 +100,7 @@
     (if issue-msg
       (handle-github-msg issue-fn issue-msg))
     (if commit-msg
-      (handle-github-msg commit-fn commit-msg))    
+      (handle-github-msg commit-fn commit-msg))
     (if (not (= (re.search
 		 "(?:(.*core team.*members?.*|.*members?.*core team.*))"
 		 message) null))

@@ -2,22 +2,21 @@
 	irc.bot
 	[hy.importer [import_file_to_module]])
 
-(def plugins [])
+(def *plugins* [])
 
 (defun welcome-handler [connection event]
-  (foreach [(, dir subdir files) (os.walk
-				  (os.path.join (os.path.dirname
-						 (os.path.realpath __file__))
-						 "plugins"))]
+  (foreach [(, dir subdir files) (os.walk (-> (os.path.dirname
+					       (os.path.realpath __file__))
+					      (os.path.join "plugins")))]
     (foreach [file files]
       (if (.endswith file ".hy")
-	(.append plugins (import_file_to_module (get (.split file ".") 0)
+	(.append *plugins* (import_file_to_module (get (.split file ".") 0)
 						(os.path.join dir file))))))
   (.join connection "#hy"))
 
 (defun pubmsg-handler [connection event]
   (let [[arg (get event.arguments 0)]]
-    (foreach [plugin plugins]
+    (foreach [plugin *plugins*]
       (.process plugin connection event arg))))
 
 (defun start[]

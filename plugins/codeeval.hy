@@ -8,7 +8,7 @@
 	[hy.compiler [hy_compile]]
 	[hy.cmdline [HyREPL]])
 
-(def hr (HyREPL))
+(def *hr* (HyREPL))
 
 (defn dump-exception [e]
   (.write sys.stderr (str e))
@@ -17,7 +17,7 @@
 
 (defun eval-code [connection target code &optional [dry-run False]]
   (setv sys.stdout (StringIO))
-  (.runsource hr code)
+  (.runsource *hr* code)
   (if dry-run
     (.replace (.getvalue sys.stdout) "\n" " ")
     (.privmsg connection target (.replace (.getvalue sys.stdout) "\n" " "))))
