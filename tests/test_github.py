@@ -22,7 +22,8 @@ def test_get_github_commit():
         ["Commit", "3e8941c", "on", "hylang/hy", "by",
          "Berker Peksag:",
          "Convert stdout and stderr to UTF-8 properly in the run_cmd helper.",
-         "<https://github.com/hylang/hy/commit/3e8941cdde01635890db524c4789f0640fe665c3>"])
+         "<https://github.com/hylang/hy" +
+         "/commit/3e8941cdde01635890db524c4789f0640fe665c3>"])
     actual = g.get_github_commit(None, None, "3e8941c", dry_run=True)
     assert expected == actual
 
