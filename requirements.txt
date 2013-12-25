@@ -1,0 +1,4 @@
+irc
+requests
+-e git+https://github.com/hylang/hy.git#egg=hy
+astor>=0.3
