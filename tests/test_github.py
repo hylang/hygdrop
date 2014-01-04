@@ -37,7 +37,7 @@ def test_get_core_members():
                           "Gergely Nagy", "Berker Peksag",
                           "Christopher Allan Webber", "khinsen",
                           "J Kenneth King", "Paul Tagliamonte",
-                          "Will Kahn-Greene", "Morten Linderud",
-                          "Abhishek L"])
+                          "Bob Tolbert", "Will Kahn-Greene",
+                          "Morten Linderud", "Abhishek L"])
     actual = g.get_core_members(None, None, dry_run=True)
     assert actual == expected
