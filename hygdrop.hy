@@ -23,21 +23,21 @@ Options:
 (def *arguments* (kwapply (docopt *usage*) {"version" "Hygdrop 0.1"}))
 
 (defun welcome-handler [connection event]
-  (foreach [(, dir subdir files) (os.walk (-> (os.path.dirname
+  (for [(, dir subdir files) (os.walk (-> (os.path.dirname
 					       (os.path.realpath __file__))
 					      (os.path.join "plugins")))]
-    (foreach [file files]
+    (for [file files]
       (if (.endswith file ".hy")
 	(.append *plugins* (import_file_to_module (get (.split file ".") 0)
 						  (os.path.join dir file))))))
   (if (get *arguments* "--channel")
-    (foreach [channel (.split (get *arguments* "--channel") ",")]
+    (for [channel (.split (get *arguments* "--channel") ",")]
       (.join connection channel))
     (.join connection "#hy")))
 
 (defun pubmsg-handler [connection event]
   (let [[arg (get event.arguments 0)]]
-    (foreach [plugin *plugins*]
+    (for [plugin *plugins*]
       (.process plugin connection event arg))))
 
 (defun start[]
