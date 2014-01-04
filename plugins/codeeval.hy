@@ -12,31 +12,37 @@
 (def *hr* (HyREPL))
 
 (defmacro paste-code [payload &rest body]
-  `(let [[r (kwapply (.post requests "https://www.refheap.com/api/paste")
-		     {"data" ~payload})]] ~@body))
+  `(let [[r (.post requests "https://www.refheap.com/api/paste" ~payload)]]
+     ~@body))
 
-(defn dump-exception [e]
-  (.write sys.stderr (str e))
-  (.write sys.stderr "\n")
-  (.flush sys.stderr))
-
-
+(defn dump-exception [connection target e]
+  (paste-code {"contents" (str e) "language" "Python Traceback"}
+	      (if (= r.status_code 201)
+		(.privmsg connection target
+			  (.format "Aargh something broke {}"
+				   (get (.json r) "url")))
+		(progn
+		 (.write sys.stderr (str e))
+		 (.write sys.stderr "\n")
+		 (.flush sys.stderr)))))
 
 (defun eval-code [connection target code &optional [dry-run False]]
   (setv sys.stdout (StringIO))
   (.runsource *hr* code)
+  ;; (exec (ast_compile (-> (import_buffer_to_hst code)
+  ;; 				  (hy_compile "__main__" ast.Interactive))
+  ;; 			      "<input>" "single"))
   (if dry-run
     (.replace (.getvalue sys.stdout) "\n" " ")
     (let [[output (.getvalue sys.stdout)]
-	  [message ["Hey output was too long I pasted it at"]]]
-      (if (!= (.find output "\n") -1)
-	(paste-code {"content" output "language" "Clojure"}
+	  [message ["Output was too long bro, so here is the paste:"]]]
+      (if (>= (len output) 512)
+	(paste-code {"contents" output "language" "IRC Logs"}
 		    (if (= r.status_code 201)
 		      (progn
-		       (setv do-not-return-damnit
-			     (.append message (get (.json r) "url")))
-		       (.privmsg connection target (.join " " message))))))
-      (.privmsg connection target (.replace output "\n" " ")))))
+		       (.append message (get (.json r) "url"))
+		       (.privmsg connection target (.join " " message)))))
+	(.privmsg connection target (.replace output "\n" " "))))))
 
 (defun source-code [connection target hy-code &optional [dry-run False]]
   (let [[astorcode (-> (import_buffer_to_hst hy-code)
@@ -44,9 +50,13 @@
 	[pysource (.to_source astor.codegen astorcode)]]
     (if dry-run
       pysource
-      (for [line (.split pysource "\n")]
-	(.privmsg connection target line)
-	(sleep 0.5)))))
+      (paste-code {"contents" pysource "language" "Python"}
+		  (if (= r.status_code 201)
+		    (.privmsg connection target
+			      (.format "Yo bro your source is ready at {}"
+				       (get (.json r) "url")))
+		    (.privmsg connection target
+			      "Something went wrong while creating paste"))))))
 
 (defun process [connection event message]
   (try
@@ -67,5 +77,5 @@
 	(sleep 0.5))
       (catch [f Exception]
 	(progn
-	 (dump-exception e)
-	 (dump-exception f)))))))
+	 (dump-exception connection event.target e)
+	 (dump-exception connection event.target f)))))))
