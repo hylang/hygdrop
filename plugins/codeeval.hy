@@ -116,13 +116,17 @@
         [pysource (.to_source astor.codegen astorcode)]]
     (if dry-run
       pysource
-      (paste-code {"contents" pysource "language" "Python"}
-                  (if (= r.status_code 201)
-                    (.privmsg connection target
-                              (.format "Yo bro your source is ready at {}"
-                                       (get (.json r) "url")))
-                    (.privmsg connection target
-                              "Something went wrong while creating paste"))))))
+      (if (or (!= (.find pysource "\n") -1) (>= (len pysource) 512))
+        (paste-code {"contents" pysource "language" "Python"}
+                    (if (= r.status_code 201)
+                      (.privmsg connection target
+                                (.format "Yo bro your source is ready at {}"
+                                         (get (.json r) "url")))
+                      (.privmsg connection target
+                                "Something went wrong while creating paste")))
+        (for [srcline (.split pysource "\n")]
+          (.privmsg connection target srcline)
+          (sleep 0.5))))))
 
 (defun process [connection event message]
   (try
