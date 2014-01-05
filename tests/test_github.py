@@ -14,7 +14,7 @@ def test_get_github_issue():
         ["Issue #" + "180", "on", "hylang/hy", "by",
          "khinsen:",
          "Macro expansion works differently from Lisp conventions",
-         "(open)",
+         "(open)", "[bug]",
          "<https://github.com/hylang/hy/issues/180>"])
     actual = g.get_github_issue(None, None, "180", dry_run=True)
     assert expected == actual
