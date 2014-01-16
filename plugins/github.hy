@@ -65,7 +65,7 @@
 	  [message (list)]]
       (if (= (getattr api-result "status_code") 200)
 	(do
-	 (foreach [dev api-json]
+	 (for [dev api-json]
 	   (do
 	    (setv dev-result (.get requests
 				   (.format "https://api.github.com/users/{}"

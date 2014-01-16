@@ -10,10 +10,13 @@ g = import_file_to_module("github", plugin_to_load)
 
 
 def test_get_github_issue():
-    expected = " ".join(["Pull Request #" + "310", "on", "hylang/hy", "by",
-                         "sbp:", "Library based macroexpand and macroexpand-1",
-                         "(open)", "<https://github.com/hylang/hy/pull/310>"])
-    actual = g.get_github_issue(None, None, "310", dry_run=True)
+    expected = " ".join(
+        ["Issue #" + "180", "on", "hylang/hy", "by",
+         "khinsen:",
+         "Macro expansion works differently from Lisp conventions",
+         "(open)", "[bug]",
+         "<https://github.com/hylang/hy/issues/180>"])
+    actual = g.get_github_issue(None, None, "180", dry_run=True)
     assert expected == actual
 
 
@@ -34,7 +37,7 @@ def test_get_core_members():
                           "Gergely Nagy", "Berker Peksag",
                           "Christopher Allan Webber", "khinsen",
                           "J Kenneth King", "Paul Tagliamonte",
-                          "Will Kahn-Greene", "Morten Linderud",
-                          "Abhishek L"])
+                          "Bob Tolbert", "Will Kahn-Greene",
+                          "Morten Linderud", "Abhishek L"])
     actual = g.get_core_members(None, None, dry_run=True)
     assert actual == expected

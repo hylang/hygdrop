@@ -39,5 +39,8 @@ TODO
 - [x] Code can not handle referencing function defined in the same line
 - [x] Write a new driver and remove `hygdrop/__init__.hy`
 - [x] Integrate spy mode to dump python code
-- [ ] Define DSL to add misc functionalities to bot
- 
+- [x] Pastebin the looong lines and give the pastebin link to IRC
+- [x] Move second level exception messages from stderr to IRC
+- [ ] Port command.clj from [Cjoey](https://github.com/Foxboron/Parjer/blob/master/src/parjer/commands.clj)
+      to command.hy
+- [ ] Implement private message handling by bot
