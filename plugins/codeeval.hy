@@ -18,7 +18,7 @@
   exception so it can be communicated to end user."
   [[--init--
     (fn [self &optional [locals null] [filename "<input"]]
-      (kwapply (code.InteractiveConsole.__init__ self)
+      (apply code.InteractiveConsole.__init__  [self]
                {"locals" locals "filename" filename}))]
    [runsource
     (fn [self source &optional [filename "<input>"] [symbol "single"]]
