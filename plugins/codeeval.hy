@@ -102,7 +102,7 @@
     (.replace (.getvalue sys.stdout) "\n" " ")
     (let [[output (.getvalue sys.stdout)]
           [message ["Output was too long bro, so here is the paste:"]]]
-      (if (or (>= (len output) 512) (!= (.find output "\n") -1))
+      (if (>= (len output) 256)
         (paste-code {"contents" output "language" "IRC Logs"}
                     (if (= r.status_code 201)
                       (progn
