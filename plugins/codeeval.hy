@@ -18,7 +18,7 @@
   exception so it can be communicated to end user."
   [[--init--
     (fn [self &optional [locals null] [filename "<input"]]
-      (kwapply (code.InteractiveConsole.__init__ self)
+      (apply code.InteractiveConsole.__init__  [self]
                {"locals" locals "filename" filename}))]
    [runsource
     (fn [self source &optional [filename "<input>"] [symbol "single"]]
@@ -102,7 +102,7 @@
     (.replace (.getvalue sys.stdout) "\n" " ")
     (let [[output (.getvalue sys.stdout)]
           [message ["Output was too long bro, so here is the paste:"]]]
-      (if (or (>= (len output) 512) (!= (.find output "\n") -1))
+      (if (>= (len output) 256)
         (paste-code {"contents" output "language" "IRC Logs"}
                     (if (= r.status_code 201)
                       (progn

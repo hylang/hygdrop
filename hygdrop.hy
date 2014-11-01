@@ -20,7 +20,7 @@ Options:
 --port=<portnumber>           Port number to connect to IRC server
 --nick=<nickname>             Nick the bot should use")
 
-(def *arguments* (kwapply (docopt *usage*) {"version" "Hygdrop 0.1"}))
+(def *arguments* (apply docopt [*usage*] {"version" "Hygdrop 0.1"}))
 
 (defun welcome-handler [connection event]
   (for [(, dir subdir files) (os.walk (-> (os.path.dirname

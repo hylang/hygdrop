@@ -2,7 +2,9 @@
 	re
 	[functools [partial lru_cache]])
 
-(with-decorator (kwapply (lru_cache) {"maxsize" 256})
+(defmacro kwonly [f kwargs] `(apply ~f [] ~kwargs))
+
+(with-decorator (kwonly lru_cache {"maxsize" 256})
   (defun get-github-issue [connection target issue
 			   &optional [project "hylang"] [repo "hy"]
 			   [dry-run False]]
@@ -32,7 +34,7 @@
 	    (.join " " message)
 	    (.notice connection target (.join " " message))))))))
 
-(with-decorator (kwapply (lru_cache) {"maxsize" 256})
+(with-decorator (kwonly lru_cache {"maxsize" 256})
   (defun get-github-commit [connection target commit
 			    &optional [project "hylang"] [repo "hy"]
 			    [dry-run False]]
@@ -55,7 +57,7 @@
 	    (.join " " message)
 	    (.notice connection target (.join " " message))))))))
 
-(with-decorator (kwapply (lru_cache) {"maxsize" 256})
+(with-decorator (kwonly lru_cache {"maxsize" 256})
   (defun get-core-members [connection target &optional [project "hylang"]
 			   [dry-run False]]
     (let [[api-url (.format "https://api.github.com/orgs/{}/members"
@@ -89,8 +91,8 @@
 	[query (.group github-msg "query")]]
     (if (not project) (setv project "hylang"))
     (if (not repo) (setv repo "hy"))
-    (kwapply (github-fn query) {"project" project "repo" repo
-					  "dry_run" (if dry-run True False)})))
+    (apply github-fn [query] {"project" project "repo" repo
+                                         "dry_run" dry-run})))
 
 (defun process[connection event message]
   (let [[issue-msg (re.search "(((?P<project>[a-zA-Z0-9._-]+)/)?(?P<repo>[a-zA-Z0-9._-]+))?#(?P<query>\\d+)" message)]
