@@ -1,2 +1,4 @@
--r requirements-docker.txt
 hy>=0.10
+irc
+requests
+docopt
